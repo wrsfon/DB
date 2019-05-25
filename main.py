@@ -215,3 +215,102 @@ def showTuitionOfFacultyById(facultyId):
     finally:
         cursor.close()
         cnx.close()
+
+@app.route('/moved/<id>')
+def moved(id):
+    try:
+        cnx = mysql.connect()
+        cursor = cnx.cursor(pymysql.cursors.DictCursor)
+        cursor.execute("UPDATE student SET STATUS = 'M' WHERE ID = %s", id)
+        resp = jsonify("moved successful!")
+        resp.status_code = 200
+        return resp
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        cnx.close()
+
+@app.route('/add', methods=['POST'])
+def add():
+    try:
+        cnx = mysql.connect()
+        cursor = cnx.cursor(pymysql.cursors.DictCursor)
+        cursor.execute("SELECT MAX(ID) FROM student")
+        rows = cursor.fetchall()
+        newID = int(rows[0]['MAX(ID)'])+1
+
+        req = request.get_json()
+        cursor.execute("SELECT FACULTY_ID FROM faculty WHERE FACULTY_NAME = %s", req['FACULTY_NAME'])
+        rows = cursor.fetchall()
+        facultyId = rows[0]['FACULTY_ID']
+        
+        cursor.execute("INSERT student (ID, FIRST_NAME, LAST_NAME, GENDER, BDATE, ADDRESS, STATUS, FACULTY_ID) \
+                        VALUES (%s, %s, %s, %s, %s, %s, 'S', 0%s)" \
+                        , (newID, req['FIRST_NAME'], req['LAST_NAME'], req['GENDER'], req['BDATE'], req['ADDRESS'], facultyId))
+
+        resp = jsonify("added successful!")
+        resp.status_code = 200
+        return resp
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        cnx.close()
+
+@app.route('/test')
+def test():
+    try:
+        cnx = mysql.connect()
+        cursor = cnx.cursor(pymysql.cursors.DictCursor)
+        cursor.execute("SELECT ID FROM payment GROUP BY ID HAVING COUNT(*) = 8")
+        rows = cursor.fetchall()
+        resp = jsonify(rows)
+        resp.status_code = 200
+        return resp
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        cnx.close()
+
+@app.route('/allOld')
+def allOld():
+    try:
+        cnx = mysql.connect()
+        cursor = cnx.cursor(pymysql.cursors.DictCursor)
+        cursor.execute("SELECT ID FROM student WHERE ID LIKE \"58%\"")
+        rows = cursor.fetchall()
+        resp = jsonify(rows)
+        resp.status_code = 200
+        return resp
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        cnx.close()
+
+@app.route('/show-non-graduated')
+def showNonGraduated():
+    try:
+        listId = requests.get('http://127.0.0.1:5000/allOld')
+        blackList = requests.get('http://127.0.0.1:5000/test')
+
+        result = []
+        for ele in listId.json():
+            print(ele['ID'])
+            for bkl in blackList.json():
+                if ele['ID']==bkl['ID']:
+                    result.append({"ID": ele['ID']})
+                    break
+        
+        cnx = mysql.connect()
+        cursor = cnx.cursor(pymysql.cursors.DictCursor)
+        resp = jsonify(result)
+        resp.status_code = 200
+        return resp
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        cnx.close()
