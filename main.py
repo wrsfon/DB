@@ -89,26 +89,21 @@ def student_grade(id):
 
         blacklist = requests.get('http://127.0.0.1:5000/notpay')
 
-        status = 1
-
         for ele in blacklist.json():
             print(ele['ID'])
             if str(ele['ID']) == str(id):
-                status = 0
-                break
+                resp = jsonify("Please pay for the treatment service.")
+                resp.status_code = 200
+                return resp
 
-        if(status == 1):
-            cursor.execute("SELECT ID,subject.SUBJECT_ID,subject.SUBJECT_NAME,GRADE \
+        cursor.execute("SELECT ID,subject.SUBJECT_ID,subject.SUBJECT_NAME,GRADE \
                             FROM course_enroll,subject \
                             WHERE course_enroll.SUBJECT_ID=subject.SUBJECT_ID and ID = %s", id)
-            rows = cursor.fetchall()
-            resp = jsonify(rows)
-            resp.status_code = 200
-            return resp
-        else:
-            resp = jsonify("Please pay for the treatment service.")
-            resp.status_code = 200
-            return resp
+        rows = cursor.fetchall()
+        resp = jsonify(rows)
+        resp.status_code = 200
+        return resp
+
     except Exception as e:
         print(e)
     finally:
