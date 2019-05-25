@@ -249,12 +249,14 @@ def notpay():
         cursor.close()
         cnx.close()
 
-@app.route('/moved/<id>')
-def moved(id):
+@app.route('/moved/', methods=['POST'])
+def moved():
     try:
+        req = request.get_json()
         cnx = mysql.connect()
         cursor = cnx.cursor(pymysql.cursors.DictCursor)
-        cursor.execute("UPDATE student SET STATUS = 'M' WHERE ID = %s", id)
+        cursor.execute("UPDATE student SET STATUS = 'M' WHERE ID = %s", req['ID'])
+        cnx.commit()
         resp = jsonify("moved successful!")
         resp.status_code = 200
         return resp
@@ -281,6 +283,7 @@ def add():
         cursor.execute("INSERT student (ID, FIRST_NAME, LAST_NAME, GENDER, BDATE, ADDRESS, STATUS, FACULTY_ID) \
                         VALUES (%s, %s, %s, %s, %s, %s, 'S', 0%s)" \
                         , (newID, req['FIRST_NAME'], req['LAST_NAME'], req['GENDER'], req['BDATE'], req['ADDRESS'], facultyId))
+        cnx.commit()
 
         resp = jsonify("added successful!")
         resp.status_code = 200
