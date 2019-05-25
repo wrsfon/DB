@@ -4,6 +4,7 @@ from flask import Flask
 from flaskext.mysql import MySQL
 import pymysql
 import requests
+import json
 
 app = Flask(__name__)
 
@@ -25,12 +26,11 @@ def student():
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/student/<id>')
 def student_id(id):
@@ -42,12 +42,11 @@ def student_id(id):
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/subject')
 def subject():
@@ -58,12 +57,11 @@ def subject():
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/subject/<id>')
 def subject_id(id):
@@ -74,41 +72,35 @@ def subject_id(id):
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/student/<id>/grades')
 def student_grade(id):
     try:
-        cnx = mysql.connect()
-        cursor = cnx.cursor(pymysql.cursors.DictCursor)
-
         blacklist = requests.get('https://clinic.serveo.net/treatment/debtor')
-
         for ele in blacklist.json():
-            print(ele['ID'])
-            if str(ele['ID']) == str(id):
+            if str(ele['student_Id']) == str(id):
                 resp = jsonify("Please pay for the treatment service.")
                 resp.status_code = 200
                 return resp
 
+        cnx = mysql.connect()
+        cursor = cnx.cursor(pymysql.cursors.DictCursor)
         cursor.execute("SELECT ID,subject.SUBJECT_ID,subject.SUBJECT_NAME,GRADE \
                             FROM course_enroll,subject \
                             WHERE course_enroll.SUBJECT_ID=subject.SUBJECT_ID and ID = %s", id)
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
-        return resp
-
-    except Exception as e:
-        print(e)
-    finally:
         cursor.close()
         cnx.close()
+        return resp
+    except Exception as e:
+        print(e)
 
 @app.route('/faculty')
 def faculty():
@@ -119,12 +111,11 @@ def faculty():
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/faculty-location')
 def showFacultyLocation():
@@ -135,12 +126,11 @@ def showFacultyLocation():
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/faculty-location/<facultyId>')
 def showFacultyLocationById(facultyId):
@@ -152,12 +142,11 @@ def showFacultyLocationById(facultyId):
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/payment')
 def showPayment():
@@ -169,12 +158,11 @@ def showPayment():
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/payment/<id>')
 def showPaymentById(id):
@@ -186,12 +174,11 @@ def showPaymentById(id):
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/tuition-of-faculty')
 def showTuitionOfFaculty():
@@ -202,13 +189,12 @@ def showTuitionOfFaculty():
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
-
+        
 @app.route('/tuition-of-faculty/<facultyId>')
 def showTuitionOfFacultyById(facultyId):
     try:
@@ -220,12 +206,11 @@ def showTuitionOfFacultyById(facultyId):
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/notpay')
 def notpay():
@@ -237,37 +222,40 @@ def notpay():
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/moved', methods=['POST'])
 def moved():
     try:
         req = request.get_json()
-        blackList = requests.get('https://clinic.serveo.net/treatment/debtor')
-        cnx = mysql.connect()
-        cursor = cnx.cursor(pymysql.cursors.DictCursor)
-
-        for ele in blackList.json():
+        blackListClinic = requests.get('https://clinic.serveo.net/treatment/debtor')
+        blackListLib = requests.get('https://library.localtunnel.me/borrow')
+        for ele in blackListClinic.json():
             if ele['student_Id'] == req['ID']:
                 resp = jsonify("Please pay for the treatment service or return the book.")
                 resp.status_code = 200
                 return resp
+        for ele in blackListLib.json():
+            if ele['MEMBER_ID'] == req['ID']:
+                resp = jsonify("Please pay for the treatment service or return the book.")
+                resp.status_code = 200
+                return resp
 
+        cnx = mysql.connect()
+        cursor = cnx.cursor(pymysql.cursors.DictCursor)
         cursor.execute("UPDATE student SET STATUS = 'M' WHERE ID = %s", req['ID'])
         cnx.commit()
         resp = jsonify("moved successful!")
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/add', methods=['POST'])
 def add():
@@ -290,65 +278,51 @@ def add():
 
         resp = jsonify("added successful!")
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
-
-@app.route('/test')
-def test():
-    try:
-        cnx = mysql.connect()
-        cursor = cnx.cursor(pymysql.cursors.DictCursor)
-        cursor.execute("SELECT ID FROM payment GROUP BY ID HAVING COUNT(*) = 8")
-        rows = cursor.fetchall()
-        resp = jsonify(rows)
-        resp.status_code = 200
-        return resp
-    except Exception as e:
-        print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/allOld')
 def allOld():
     try:
         cnx = mysql.connect()
         cursor = cnx.cursor(pymysql.cursors.DictCursor)
-        cursor.execute("SELECT ID FROM student WHERE ID LIKE \"58%\"")
+        cursor.execute("SELECT ID FROM payment WHERE TUITION_ID = 1")
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
 
 @app.route('/show-non-graduated')
 def showNonGraduated():
     try:
-        listId = requests.get('https://paene.serveo.net/allOld')
-        blackList = requests.get('https://clinic.serveo.net/treatment/debtor')
+        listId = requests.get('https://reg.serveo.net/allOld')
+        blackListClinic = requests.get('https://clinic.serveo.net/treatment/debtor')
+        blackListLib = requests.get('https://library.localtunnel.me/borrow')
 
         result = []
         for ele in listId.json():
-            for bkl in blackList.json():
-                if ele['ID']==bkl['student_Id']:
+            for bk1 in blackListClinic.json():
+                if ele['ID']==bk1['student_Id']:
                     result.append({"ID": ele['ID']})
                     break
-        
+            for bk2 in blackListLib.json():
+                if ele['ID']==bk2['MEMBER_ID']:
+                    result.append({"ID": ele['ID']})
+                    break
+
         cnx = mysql.connect()
         cursor = cnx.cursor(pymysql.cursors.DictCursor)
         resp = jsonify(result)
         resp.status_code = 200
+        cursor.close()
+        cnx.close()
         return resp
     except Exception as e:
         print(e)
-    finally:
-        cursor.close()
-        cnx.close()
