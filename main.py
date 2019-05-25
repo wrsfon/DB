@@ -87,13 +87,12 @@ def student_grade(id):
         cnx = mysql.connect()
         cursor = cnx.cursor(pymysql.cursors.DictCursor)
 
-        blacklist = requests.get('http://127.0.0.1:5000/notpay')
+        blacklist = requests.get('https://clinic.serveo.net/treatment/debtor')
 
         status = 1
 
         for ele in blacklist.json():
-            print(ele['ID'])
-            if str(ele['ID']) == str(id):
+            if str(ele['student_Id']) == str(id):
                 status = 0
                 break
 
@@ -249,12 +248,20 @@ def notpay():
         cursor.close()
         cnx.close()
 
-@app.route('/moved/', methods=['POST'])
+@app.route('/moved', methods=['POST'])
 def moved():
     try:
         req = request.get_json()
+        blackList = requests.get('https://clinic.serveo.net/treatment/debtor')
         cnx = mysql.connect()
         cursor = cnx.cursor(pymysql.cursors.DictCursor)
+
+        for ele in blackList.json():
+            if ele['student_Id'] == req['ID']:
+                resp = jsonify("Please pay for the treatment service or return the book.")
+                resp.status_code = 200
+                return resp
+
         cursor.execute("UPDATE student SET STATUS = 'M' WHERE ID = %s", req['ID'])
         cnx.commit()
         resp = jsonify("moved successful!")
@@ -329,14 +336,13 @@ def allOld():
 @app.route('/show-non-graduated')
 def showNonGraduated():
     try:
-        listId = requests.get('http://127.0.0.1:5000/allOld')
-        blackList = requests.get('http://127.0.0.1:5000/test')
+        listId = requests.get('https://paene.serveo.net/allOld')
+        blackList = requests.get('https://clinic.serveo.net/treatment/debtor')
 
         result = []
         for ele in listId.json():
-            print(ele['ID'])
             for bkl in blackList.json():
-                if ele['ID']==bkl['ID']:
+                if ele['ID']==bkl['student_Id']:
                     result.append({"ID": ele['ID']})
                     break
         
