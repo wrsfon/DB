@@ -260,22 +260,22 @@ def moved():
 @app.route('/add', methods=['POST'])
 def add():
     try:
+        req = request.get_json()
         cnx = mysql.connect()
         cursor = cnx.cursor(pymysql.cursors.DictCursor)
-        cursor.execute("SELECT MAX(ID) FROM student")
-        rows = cursor.fetchall()
-        newID = int(rows[0]['MAX(ID)'])+1
 
-        req = request.get_json()
         cursor.execute("SELECT FACULTY_ID FROM faculty WHERE FACULTY_NAME = %s", req['FACULTY_NAME'])
         rows = cursor.fetchall()
         facultyId = rows[0]['FACULTY_ID']
+
+        cursor.execute("SELECT MAX(ID) FROM student WHERE FACULTY_ID = 0%s", facultyId)
+        rows = cursor.fetchall()
+        newID = int(rows[0]['MAX(ID)'])+1
         
         cursor.execute("INSERT student (ID, FIRST_NAME, LAST_NAME, GENDER, BDATE, ADDRESS, STATUS, FACULTY_ID) \
                         VALUES (%s, %s, %s, %s, %s, %s, 'S', 0%s)" \
                         , (newID, req['FIRST_NAME'], req['LAST_NAME'], req['GENDER'], req['BDATE'], req['ADDRESS'], facultyId))
         cnx.commit()
-
         resp = jsonify("added successful!")
         resp.status_code = 200
         cursor.close()
