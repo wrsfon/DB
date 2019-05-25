@@ -215,3 +215,19 @@ def showTuitionOfFacultyById(facultyId):
     finally:
         cursor.close()
         cnx.close()
+
+@app.route('/notpay')
+def notpay():
+    try:
+        cnx = mysql.connect()
+        cursor = cnx.cursor(pymysql.cursors.DictCursor)
+        cursor.execute("SELECT ID FROM payment\
+                        WHERE STATUS = 'N' ")
+        rows = cursor.fetchall()
+        resp = jsonify(rows)
+        resp.status_code = 200
+        return resp
+    except Exception as e:
+        print(e)
+    finally:
+        pass
