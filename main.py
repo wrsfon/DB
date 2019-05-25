@@ -153,7 +153,7 @@ def showPayment():
     try:
         cnx = mysql.connect()
         cursor = cnx.cursor(pymysql.cursors.DictCursor)
-        cursor.execute("SELECT ID, payment.TUITION_ID, YEAR, TERM, PAYMENT_DATE, STATUS FROM payment, tuition_fee \
+        cursor.execute("SELECT ID, YEAR, TERM, PAYMENT_DATE, STATUS FROM payment, tuition_fee \
                         WHERE payment.TUITION_ID = tuition_fee.TUITION_ID")
         rows = cursor.fetchall()
         resp = jsonify(rows)
@@ -169,8 +169,9 @@ def showPaymentById(id):
     try:
         cnx = mysql.connect()
         cursor = cnx.cursor(pymysql.cursors.DictCursor)
-        cursor.execute("SELECT ID, AMOUNT, PAYMENT_DATE, STATUS FROM payment, tuition_of_faculty \
-                        WHERE payment.TUITION_ID = tuition_of_faculty.TUITION_ID AND ID = %s", id)
+        cursor.execute("SELECT payment.ID, YEAR, TERM, AMOUNT, PAYMENT_DATE, payment.STATUS FROM student, payment, tuition_fee, tuition_of_faculty \
+                        WHERE payment.TUITION_ID = tuition_fee.TUITION_ID AND student.FACULTY_ID = tuition_of_faculty.FACULTY_ID\
+                        AND payment.ID = %s AND student.ID = %s GROUP BY YEAR, TERM", (id,id))
         rows = cursor.fetchall()
         resp = jsonify(rows)
         resp.status_code = 200
